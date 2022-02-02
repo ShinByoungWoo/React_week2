@@ -1,11 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300&display=swap');
 
-* {
-  text-align: center;
-  font-family: 'Noto Sans KR', sans-serif;
-}
-
-.App-logo {
+/* .App-logo {
   height: 40vmin;
   pointer-events: none;
 }
@@ -39,5 +33,28 @@
   }
   to {
     transform: rotate(360deg);
+  }
+} */
+
+
+.cross:hover {
+  box-shadow: 0 2px 4px 0 rgba(1, 0, 1, 0.4), 0 6px 10px 0 rgba(0, 0, 0, 0.19);
+}
+
+    @keyframes boxFade {
+ 0% {
+  transform: rotate(0deg);
+ }
+ 50% {
+  transform: rotate(45deg);
+ }
+ 100% {
+  transform: rotate(90deg);
+ }
+}
+  
+@media (prefers-reduced-motion: no-preference) {
+  .btn {
+    animation: cross-spin  linear;
   }
 }

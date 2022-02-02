@@ -4,102 +4,132 @@ import {
   getDoc,
   getDocs,
   addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
 } from "firebase/firestore";
-import { async } from "@firebase/util";
 
 // Actions 프로젝트명/ 모듈 명/ 액션 명
-// const LOAD = "my_dictionart/widgets/LOAD"; // 서버에서 가지고올때 사용
-const CREATE = "postList/CREATE"; // 추가하기 기능
-// const UPDATE = "my_dictionart/widgets/UPDATE";
-// const REMOVE = "my_dictionart/widgets/REMOVE";
+const CREATE = "postList/CREATE";
 const LOAD = "postList/LOAD";
+const UPDATE = "postList/UPDATE";
+const DELETE = "postList/DELETE";
 
 //초기값
 const initialState = {
-  list: [
-    // { word: "테스트1 단어", explain: "테스트1 설명", example: "테스트1 예시" },
-    // { word: "테스트2 단어", explain: "테스트2 설명", example: "테스트2 예시" },
-    // { word: "테스트3 단어", explain: "테스트3 설명", example: "테스트3 예시" },
-    // {
-    //   word: "테스트4 단어",
-    //   explain: "테스트4 설명",
-    //   example: "테스aasdasdasdsad트4 예시",
-    // },
-  ],
+  list: [],
 };
-// Action Creators
-export function loadPostList(postList) {
-  //파이어 스토어랑 연결할 액션
-  return { type: LOAD, postList };
-}
 
+// Action Creators
 export function createPostList(postList) {
   return { type: CREATE, postList };
 }
 
-// export function loadWidgets() {
-//     return { type: LOAD };
-//     }
+export function loadPostList(postList) {
+  return { type: LOAD, postList };
+}
 
-//     export function createWidget(widget) {
-//     return { type: CREATE, widget };
-//     }
+export function upDatePostList(postList_index, updateList) {
+  return { type: UPDATE, postList_index, updateList };
+}
 
-//     export function updateWidget(widget) {
-//     return { type: UPDATE, widget };
-//     }
+export function deletePostList(postList_index, deleteList) {
+  return { type: DELETE, postList_index, deleteList };
+}
 
-//     export function removeWidget(widget) {
-//     return { type: REMOVE, widget };
-//     }
+//Middlewear 미들웨어 함수 //파이어베이스와 연결
 
-//Middlewear 미들웨어 함수
+//추가하기
+export const addPostListFB = (postList) => {
+  return async function (dispatch) {
+    const docRef = await addDoc(collection(db, "week2-mydictionary"), postList);
+    const post_list = { id: docRef.id, ...postList };
+    dispatch(createPostList(post_list));
+  };
+};
 
 //읽어오기
 export const loadPostListFB = () => {
   return async function (dispatch) {
     const postList_data = await getDocs(collection(db, "week2-mydictionary"));
-    // console.log(postList_data);
 
     let post_list = [];
-    postList_data.forEach((post) => {
-      post_list.push({ id: post.id, ...post.data() });
-      // console.log(post.data())
+    postList_data.forEach((week2) => {
+      post_list.push({ id: week2.id, ...week2.data() }); //수정 삭제를 위해 ID값도 가져오기
     });
-    // console.log(post_list)
     dispatch(loadPostList(post_list));
   };
 };
 
-//추가하기
-export const addPostListFB = (postList) => {
-  return async function (dispatch) {
-    const docRef = await addDoc(collection(db, "week2-mydictionary"), postList); // 맨위 포스트리스트 >> 이그잼플, 익스플레인,우드로변경시도
-    const _postList = await getDoc(docRef)
-    const post_list = { id: _postList.id, ..._postList.data() };
-    // console.log(post_list)
-    dispatch(createPostList(post_list));
+//수정하기
+export const upDatePostListFB = (postList_id, updateList) => {
+  return async function (dispatch, getState) {
+    if (!postList_id) {
+      window.alert("아이디가 없네요!");
+      return;
+    }
+    const edit_data = doc(db, "week2-mydictionary", postList_id);
+    await updateDoc(edit_data, updateList);
+
+    const _postList = getState().postList.list;
+    const postList_index = _postList.findIndex((post) => {
+      return post.id === postList_id;
+    });
+    dispatch(upDatePostList(postList_index, updateList));
   };
 };
 
+//삭제하기
+export const deletePostListFB = (postList_id, deleteList) => {
+  return async function (dispatch, getState) {
+    if (!postList_id) {
+      window.alert("아이디가 없네요!");
+      return;
+    }
+    const delete_data = doc(db, "week2-mydictionary", postList_id);
+    await deleteDoc(delete_data);
+
+    const _postList = getState().postList.list;
+    const postList_index = _postList.findIndex((post) => {
+      return post.id === postList_id;
+    });
+    dispatch(deletePostList(postList_index, deleteList));
+  };
+};
+
+
+
 // Reducer
 export default function reducer(state = initialState, action = {}) {
-  // state = {}, action = {} 기본값 주는것 오류방지하기 위한 설정임
   switch (action.type) {
+    case "postList/CREATE": {
+      const new_postList = [...state.list, action.postList];
+      return { list: new_postList };
+    }
+
     case "postList/LOAD": {
       return { list: action.postList };
     }
-    case "postList/CREATE": {
-      const new_postList = [...state.list, action.postList]; // 위에 설정된 초기값의 리스트와 액션의 값
-      return { list: new_postList };
+
+    case "postList/UPDATE": {
+      const update_postList = state.list.map((list, index) => {
+        if (parseInt(action.postList_index) === index) {
+          return action.updateList 
+        } else {
+          return list;
+        }
+      });
+      return { list: update_postList };
     }
+
+    case "postList/DETELE": {
+      const delete_postList = state.list.filter((list, index) => {
+        return parseInt(action.postList_index) !== index;
+      });
+      return { list: delete_postList};
+    }
+
     default:
       return state;
   }
 }
-
-// // side effects, only as applicable  // 미들웨어
-// // e.g. thunks, epics, etc
-// export function getWidget () {
-// return dispatch => get('/widget').then(widget => dispatch(updateWidget(widget)))
-// }

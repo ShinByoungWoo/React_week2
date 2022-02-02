@@ -1,52 +1,37 @@
-import React, { useReducer } from "react";
+import React from "react";
 import styled from "styled-components";
-import { Route, Routes } from "react-router-dom";
-import { db } from "./firebase";
+import { Route, Routes, useNavigate } from "react-router-dom";
 import List from "./ListPage";
-import { useNavigate } from "react-router-dom";
-import Detail from "./DetailPage";
+import Detail from "./Detail";
+import Add from "./AddPage";
+import NotFound from "./NotFound";
 import { useDispatch } from "react-redux";
-import { loadPostListFB, addPostListFB } from "./redux/modules/postList";
-import {
-  collection,
-  getDoc,
-  getDocs,
-  addDoc,
-  updateDoc,
-  doc,
-  deleteDoc,
-} from "firebase/firestore";
-
-
+import { loadPostListFB } from "./redux/modules/postList";
 
 function App() {
-  // React.useEffect(async () => { //파이어 스토어에 데이터넣는곳
-  //   console.log(db);
-
-  //   addDoc(collection(db, 'week2-dic'), {word: 'dd', explain: ' asd', example: 'asd21'})
-  // }, []);
-
-  const navigate = useNavigate();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  
   React.useEffect(() => {
     dispatch(loadPostListFB());
   }, [dispatch]);
 
   return (
     <Wrap className="App">
-      <div className="contain">
         <Title
           onClick={() => {
-            navigate("/");
+            navigate('/')
+            window.scrollTo({top:0, left:0, behavior:'smooth'});
           }}
         >
           신비한 동물 사전
         </Title>
         <Routes>
           <Route path="/" element={<List />} />
-          <Route path="/detail" element={<Detail />} />
+          <Route path="/add" element={<Add />} />
+          <Route path="/detail/:index" element={<Detail />} />
+          <Route path="/*" element={<NotFound />} />
         </Routes>
-      </div>
     </Wrap>
   );
 }
@@ -54,18 +39,15 @@ function App() {
 const Wrap = styled.div`
   width: 100vw;
   height: 100vh;
-  
-  & .contain {
-    width: 1200px;
-    margin: 0px auto;
-    overflow-x: hidden;
-    
-  }
+  margin: 100px auto;
+  justify-content: center;
+  align-items: center;
+  transition: 1s;
 `;
 
 const Title = styled.h1`
   width: 100%;
-  height: 90px;
+  height: 80px;
   margin-top: -10px;
   position: fixed;
   top: 0;
